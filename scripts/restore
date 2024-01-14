@@ -54,10 +54,10 @@ chown -R $app:$app "$data_dir"
 #=================================================
 ynh_script_progression --message="Adding a configuration file..." --weight=1
 
-ynh_add_config --template="../settings/conf/paperless.conf.example" --destination="$install_dir/paperless.conf"
+ynh_add_config --template="../settings/conf/paperless.conf.example" --destination="$install_dir/main/paperless.conf"
 
-chmod 400 "$install_dir/paperless.conf"
-chown $app:$app "$install_dir/paperless.conf"
+chmod 400 "$install_dir/main/paperless.conf"
+chown $app:$app "$install_dir/main/paperless.conf"
 
 #=================================================
 # RESTORE FAIL2BAN CONFIGURATION
@@ -77,14 +77,14 @@ chown $app:$app "$install_dir/paperless.conf"
 #=================================================
 ynh_script_progression --message="Installing Python dependencies..."
 
-pushd $install_dir
-	ynh_secure_remove --file="$install_dir/venv"
+pushd $install_dir/main
+	ynh_secure_remove --file="$install_dir/main/venv"
 	python3 -m venv venv
-	chown -R "$app:" "$install_dir"
+	chown -R "$app:" "$install_dir/main"
 (
-	source "$install_dir/venv/bin/activate"
-	ynh_exec_as $app $install_dir/venv/bin/pip3 install --upgrade pip setuptools wheel
-	ynh_exec_as $app $install_dir/venv/bin/pip3 install -r "$install_dir/requirements.txt"
+	source "$install_dir/main/venv/bin/activate"
+	ynh_exec_as $app $install_dir/main/venv/bin/pip3 install --upgrade pip setuptools wheel
+	ynh_exec_as $app $install_dir/main/venv/bin/pip3 install -r "$install_dir/main/requirements.txt"
 	deactivate
 )
 popd

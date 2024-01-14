@@ -42,7 +42,7 @@ if ynh_compare_current_package_version -c le -v "1.14.5~ynh1"
 then
 	# When upgrading from older version when install_dir was in /var/www,
 	# we need to rebuild the venv entierly
-	ynh_secure_remove --file="$install_dir/venv"
+	ynh_secure_remove --file="$install_dir/main/venv"
 fi
 
 #=================================================
@@ -53,7 +53,7 @@ if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
 	ynh_script_progression --message="Upgrading source files..." --weight=1
 
-	ynh_setup_source --dest_dir="$install_dir" --keep="paperless.conf"
+	ynh_setup_source --dest_dir="$install_dir/main" --keep="paperless.conf"
 fi
 
 chmod 750 "$install_dir"
@@ -75,21 +75,21 @@ ynh_add_nginx_config
 #=================================================
 ynh_script_progression --message="Installing Python dependencies..."
 
-pushd $install_dir
+pushd $install_dir/main
 	python3 -m venv venv
-	chown -R "$app:" "$install_dir"
+	chown -R "$app:" "$install_dir/main"
 (
-	source "$install_dir/venv/bin/activate"
-	ynh_exec_as $app $install_dir/venv/bin/pip3 install --upgrade pip setuptools wheel
-	ynh_exec_as $app $install_dir/venv/bin/pip3 install -r "$install_dir/requirements.txt"
+	source "$install_dir/main/venv/bin/activate"
+	ynh_exec_as $app $install_dir/main/venv/bin/pip3 install --upgrade pip setuptools wheel
+	ynh_exec_as $app $install_dir/main/venv/bin/pip3 install -r "$install_dir/main/requirements.txt"
 
 	# Installing NLTK data
-	ynh_secure_remove --file="$install_dir/nltk_data"
-	mkdir -p "$install_dir/nltk_data"
-	chown -R "$app:" "$install_dir/nltk_data"
-	ynh_exec_warn_less ynh_exec_as $app $install_dir/venv/bin/python3 -m nltk.downloader -d "$install_dir/nltk_data" snowball_data
-	ynh_exec_warn_less ynh_exec_as $app $install_dir/venv/bin/python3 -m nltk.downloader -d "$install_dir/nltk_data" stopwords
-	ynh_exec_warn_less ynh_exec_as $app $install_dir/venv/bin/python3 -m nltk.downloader -d "$install_dir/nltk_data" punkt
+	ynh_secure_remove --file="$install_dir/main/nltk_data"
+	mkdir -p "$install_dir/main/nltk_data"
+	chown -R "$app:" "$install_dir/main/nltk_data"
+	ynh_exec_warn_less ynh_exec_as $app $install_dir/main/venv/bin/python3 -m nltk.downloader -d "$install_dir/main/nltk_data" snowball_data
+	ynh_exec_warn_less ynh_exec_as $app $install_dir/main/venv/bin/python3 -m nltk.downloader -d "$install_dir/main/nltk_data" stopwords
+	ynh_exec_warn_less ynh_exec_as $app $install_dir/main/venv/bin/python3 -m nltk.downloader -d "$install_dir/main/nltk_data" punkt
 
 	deactivate
 )
@@ -100,20 +100,20 @@ popd
 #=================================================
 ynh_script_progression --message="Updating a configuration file..." --weight=1
 
-ynh_add_config --template="paperless.conf.example" --destination="$install_dir/paperless.conf"
+ynh_add_config --template="paperless.conf.example" --destination="$install_dir/main/paperless.conf"
 
-chmod 400 "$install_dir/paperless.conf"
-chown $app:$app "$install_dir/paperless.conf"
+chmod 400 "$install_dir/main/paperless.conf"
+chown $app:$app "$install_dir/main/paperless.conf"
 
 #=================================================
 # SETUP THE DATABASE
 #=================================================
 ynh_script_progression --message="Setting up the database..." --weight=1
 
-pushd "$install_dir/src"
+pushd "$install_dir/main/src"
 (
-	source "$install_dir/venv/bin/activate"
-	ynh_exec_as $app $install_dir/venv/bin/python manage.py migrate
+	source "$install_dir/main/venv/bin/activate"
+	ynh_exec_as $app $install_dir/main/venv/bin/python manage.py migrate
 	deactivate
 )
 popd
