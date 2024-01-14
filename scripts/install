@@ -15,7 +15,16 @@ source /usr/share/yunohost/helpers
 #=================================================
 ynh_script_progression --message="Setting up source files..." --weight=1
 
-ynh_setup_source --dest_dir="$install_dir"
+GS_BUILD_DIR=$(mktemp -d)
+ynh_setup_source --dest_dir="$GS_BUILD_DIR" -s gs
+ynh_setup_source --dest_dir="$install_dir"/main
+
+ynh_script_progression --message="Building Ghostscript..." --weight=1
+
+pushd $GS_BUILD_DIR
+	ynh_exec_warn_less ./configure --prefix="$install_dir"/gs/
+	ynh_exec_warn_less make install
+popd
 
 chmod 750 "$install_dir"
 chmod -R o-rwx "$install_dir"
@@ -78,20 +87,20 @@ ynh_app_setting_set --app=$app --key=paperless_secret_key  --value=$paperless_se
 ocr_language="eng"
 ynh_app_setting_set --app=$app --key=ocr_language  --value=$ocr_language
 
-ynh_add_config --template="paperless.conf.example" --destination="$install_dir/paperless.conf"
+ynh_add_config --template="paperless.conf.example" --destination="$install_dir/main/paperless.conf"
 
-chmod 400 "$install_dir/paperless.conf"
-chown $app:$app "$install_dir/paperless.conf"
+chmod 400 "$install_dir/main/paperless.conf"
+chown $app:$app "$install_dir/main/paperless.conf"
 
 #=================================================
 # SETUP THE DATABASE
 #=================================================
 ynh_script_progression --message="Setting up the database..." --weight=1
 
-pushd "$install_dir/src"
+pushd "$install_dir/main/src"
 (
-	source "$install_dir/venv/bin/activate"
-	ynh_exec_as $app $install_dir/venv/bin/python manage.py migrate
+	source "$install_dir/main/venv/bin/activate"
+	ynh_exec_as $app $install_dir/main/venv/bin/python manage.py migrate
 	deactivate
 )
 popd
@@ -101,11 +110,11 @@ popd
 #=================================================
 ynh_script_progression --message="Creating the admin user..." --weight=1
 
-pushd "$install_dir/src"
+pushd "$install_dir/main/src"
 (
-	source "$install_dir/venv/bin/activate"
+	source "$install_dir/main/venv/bin/activate"
 	email=$(ynh_user_get_info $admin 'mail')
-	ynh_exec_as $app env "DJANGO_SUPERUSER_PASSWORD=$admin_pw" $install_dir/venv/bin/python3 manage.py createsuperuser --noinput --username "$admin" --email "$email"
+	ynh_exec_as $app env "DJANGO_SUPERUSER_PASSWORD=$admin_pw" $install_dir/main/venv/bin/python3 manage.py createsuperuser --noinput --username "$admin" --email "$email"
 	deactivate
 )
 popd
