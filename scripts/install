@@ -45,20 +45,20 @@ ynh_add_nginx_config
 #=================================================
 ynh_script_progression --message="Installing Python dependencies..."
 
-pushd $install_dir
+pushd $install_dir/main
 	python3 -m venv venv
-	chown -R "$app:" "$install_dir"
+	chown -R "$app:" "$install_dir"/main
 (
-	source "$install_dir/venv/bin/activate"
-	ynh_exec_as $app $install_dir/venv/bin/pip3 install --upgrade pip setuptools wheel
-	ynh_exec_as $app $install_dir/venv/bin/pip3 install -r "$install_dir/requirements.txt"
+	source "$install_dir/main/venv/bin/activate"
+	ynh_exec_as $app $install_dir/main/venv/bin/pip3 install --upgrade pip setuptools wheel
+	ynh_exec_as $app $install_dir/main/venv/bin/pip3 install -r "$install_dir/main/requirements.txt"
 
 	# Installing NLTK data
-	mkdir -p "$install_dir/nltk_data"
-	chown -R "$app:" "$install_dir/nltk_data"
-	ynh_exec_warn_less ynh_exec_as $app $install_dir/venv/bin/python3 -m nltk.downloader -d "$install_dir/nltk_data" snowball_data
-	ynh_exec_warn_less ynh_exec_as $app $install_dir/venv/bin/python3 -m nltk.downloader -d "$install_dir/nltk_data" stopwords
-	ynh_exec_warn_less ynh_exec_as $app $install_dir/venv/bin/python3 -m nltk.downloader -d "$install_dir/nltk_data" punkt
+	mkdir -p "$install_dir/main/nltk_data"
+	chown -R "$app:" "$install_dir/main/nltk_data"
+	ynh_exec_warn_less ynh_exec_as $app $install_dir/main/venv/bin/python3 -m nltk.downloader -d "$install_dir/main/nltk_data" snowball_data
+	ynh_exec_warn_less ynh_exec_as $app $install_dir/main/venv/bin/python3 -m nltk.downloader -d "$install_dir/main/nltk_data" stopwords
+	ynh_exec_warn_less ynh_exec_as $app $install_dir/main/venv/bin/python3 -m nltk.downloader -d "$install_dir/main/nltk_data" punkt
 
 	deactivate
 )
